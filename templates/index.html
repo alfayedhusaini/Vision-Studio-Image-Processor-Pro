@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Efek Citra Digital</title>
+<style>
+* { box-sizing: border-box; font-family: "Segoe UI", Arial, sans-serif; }
+body { background: linear-gradient(135deg, #e3f2fd, #f9f9f9); margin: 0; padding: 20px; min-height: 100vh; }
+.container { width: 95%; max-width: 1400px; margin: 20px auto; background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+h2, h4 { text-align: center; color: #0d47a1; margin: 10px 0; }
+h4 { color: #555; font-weight: 400; margin-bottom: 30px; }
+.controls, .preview-box, .action-area { text-align: center; margin-top: 20px; }
+input[type="file"] { padding: 10px; background: #f0f0f0; border-radius: 8px; }
+select, button, .btn-download { padding: 12px 20px; margin: 8px; border-radius: 8px; border: 1px solid #ccc; font-size: 15px; display: inline-block; text-decoration: none; }
+button { background: #1976d2; color: #fff; border: none; cursor: pointer; transition: 0.3s; }
+button:hover { background: #0d47a1; }
+.btn-download { background: #2e7d32; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
+.btn-download:hover { background: #1b5e20; }
+.preview-box { margin-top: 30px; }
+.preview-box img { max-width: 85%; max-height: 60vh; border-radius: 10px; border: 2px solid #1976d2; padding: 5px; background: #f5f5f5; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+</style>
+</head>
+<body>
+<div class="container">
+    <h2>VISION STUDIO</h2>
+    <h4>sistem pemroses efek citra real-time digital</h4>
+    <div class="controls">
+        <input type="file" id="fileInput" accept="image/*">
+        <button onclick="location.href='/webcam_page'">Ambil Foto</button>
+    </div>
+    <div class="preview-box">
+        <div id="hasilContainer" style="display:none;">
+            <img id="pre"><br>
+            <div class="action-area">
+                <div style="margin-bottom: 15px;">
+                    <label><strong>Pilih Efek:</strong></label>
+                    <select id="op" onchange="updateRealtimeEffect()">
+                        <option value="none">Normal</option>
+                        <option value="grayscale">Abu-abu</option>
+                        <option value="blur">Buram</option>
+                        <option value="brightness">Cerah</option>
+                        <option value="threshold">Batas Ambang</option>
+                        <option value="invert">Negatif</option>
+                        <option value="sepia">Sepia</option>
+                        <option value="contrast">Kontras Tinggi</option>
+                        <option value="edge">Deteksi Tepi</option>
+                        <option value="sharpen">Pertajam</option>
+                    </select>
+                </div>
+                <button onclick="downloadB64Image()" class="btn-download">Download Gambar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<canvas id="hiddenCanvas" style="display:none;"></canvas>
+<script>
+const fileIn = document.getElementById('fileInput'), op = document.getElementById('op'), pre = document.getElementById('pre'), hasilContainer = document.getElementById('hasilContainer'), canvas = document.getElementById('hiddenCanvas');
+let originalImg = new Image();
+
+fileIn.onchange = e => {
+    if(!e.target.files[0]) return;
+    const r = new FileReader();
+    r.onload = f => {
+        originalImg.src = f.target.result;
+        pre.src = f.target.result;
+        hasilContainer.style.display = 'block';
+        op.value = "none";
+        pre.style.filter = "none";
+    };
+    r.readAsDataURL(e.target.files[0]);
+};
+
+function updateRealtimeEffect() {
+    let f = "none";
+    if (op.value === 'grayscale') f = "grayscale(100%)";
+    else if (op.value === 'blur') f = "blur(5px)";
+    else if (op.value === 'brightness') f = "brightness(1.5)";
+    else if (op.value === 'threshold') f = "contrast(1000%) grayscale(100%)";
+    else if (op.value === 'invert') f = "invert(100%)";
+    else if (op.value === 'sepia') f = "sepia(100%)";
+    else if (op.value === 'contrast') f = "contrast(200%)";
+    else if (op.value === 'edge') f = "contrast(1000%) grayscale(100%) invert(100%)";
+    else if (op.value === 'sharpen') f = "contrast(120%) saturate(120%)";
+    pre.style.filter = f;
+}
+
+function downloadB64Image() {
+    const ctx = canvas.getContext('2d');
+    canvas.width = originalImg.naturalWidth;
+    canvas.height = originalImg.naturalHeight;
+    let filterString = "none";
+    if (op.value === 'grayscale') filterString = "grayscale(100%)";
+    else if (op.value === 'blur') filterString = "blur(5px)";
+    else if (op.value === 'brightness') filterString = "brightness(1.5)";
+    else if (op.value === 'threshold') filterString = "contrast(1000%) grayscale(100%)";
+    else if (op.value === 'invert') filterString = "invert(100%)";
+    else if (op.value === 'sepia') filterString = "sepia(100%)";
+    else if (op.value === 'contrast') filterString = "contrast(200%)";
+    else if (op.value === 'edge') filterString = "contrast(1000%) grayscale(100%) invert(100%)";
+    else if (op.value === 'sharpen') filterString = "contrast(120%) saturate(120%)";
+    
+    ctx.filter = filterString;
+    ctx.drawImage(originalImg, 0, 0, canvas.width, canvas.height);
+    const link = document.createElement('a');
+    link.download = `vision_studio_${op.value}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+}
+</script>
+</body>
+</html>
